@@ -2,9 +2,8 @@ const express = require('express')
 
 const routes = express.Router()
 
-//site
 routes.get("/", function (req, res) {
-    return res.send("OK")
+    return res.render("layout")
 })
 
 module.exports = routes
