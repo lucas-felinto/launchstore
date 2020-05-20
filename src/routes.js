@@ -8,6 +8,7 @@ routes.get("/", function (req, res) {
 })
 
 routes.get("/products/create", productsController.create)
+routes.post("/products", productsController.post)
 
 routes.get('/ads/create', function (req, res) {
     return res.redirect("/products/create")
