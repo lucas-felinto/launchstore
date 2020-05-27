@@ -1,5 +1,7 @@
 const Category = require('../models/Category')
 const Product = require('../models/Product')
+const File = require('../models/File')
+
 const { formatPrice } = require('../../lib/utils')
 
 module.exports = {
@@ -22,7 +24,11 @@ module.exports = {
         let results = await Product.create(req.body)
         const productId = results.rows[0].id
 
-        return res.redirect(`/products/${productId}`)
+        //criando um array em filePromise com a função map que retornará cada file criado
+        const filesPromise = req.files.map(file => File.create({...file, product_id: productId}))
+        await Promise.all(filesPromise)
+
+        return res.redirect(`/products/${productId}/edit`)
 
     },
     async edit (req, res) {
@@ -38,11 +44,35 @@ module.exports = {
         results = await Category.all()
         const categories = results.rows
 
-        return res.render("products/edit", { categories, product })
+        results = await Product.files(product.id)
+        let files = results.rows
+        files = files.map(file => ({
+            ...file,
+            src: `${req.protocol}://${req.headers.host}${file.path.replace("public", "")}`
+        })) 
+
+        console.log(req)
+
+        return res.render("products/edit", { categories, product, files })
         
     },
     async put (req, res) {
-        
+        if (req.files.length != 0) {
+            const newFilesPromise = req.files.map(file =>
+                File.create({...file, product_id: req.body.id}))
+
+            await Promise.all(newFilesPromise)
+        }
+
+        if (req.body.removed_files) {
+            const removedFiles = req.body.removed_files.split(",")
+            const lastIndex = removedFiles.length - 1
+            removedFiles.splice(lastIndex, 1)
+
+            const removedFilesPromise = removedFiles.map(id => File.delete(id))
+            await Promise.all(removedFilesPromise)
+        }
+
         req.body.price = req.body.price.replace(/\D/g, "")
         
         if (req.body.old_price != req.body.price) {
