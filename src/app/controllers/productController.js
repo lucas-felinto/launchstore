@@ -50,9 +50,6 @@ module.exports = {
             ...file,
             src: `${req.protocol}://${req.headers.host}${file.path.replace("public", "")}`
         })) 
-
-        console.log(req)
-
         return res.render("products/edit", { categories, product, files })
         
     },
